@@ -16,6 +16,3 @@
 hello <- function() {
   print("Hello, world!")
 }
-squared <- function(x) {
-  return(x*x)
-}
