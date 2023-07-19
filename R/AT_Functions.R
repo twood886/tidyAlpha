@@ -213,7 +213,7 @@ AlphaTest<-function(
       values_to = "return.value") %>%
     named_group_split(`factor.name`) %>%
     map(., \(x) named_group_split(x, `return.period`)) %>%
-    map_depth(., 2, \(x) named_group_split(x, all_of(pname)))
+    map_depth(., 2, \(x) named_group_split(x, get(pname)))
 
   # Adjust Data
   data.adj <-
@@ -231,7 +231,7 @@ AlphaTest<-function(
   data.AT <-
     data.adj %>%
     map_depth(., 3, AlphaTestSRSFSP) %>%
-    map_depth(., 2, bind_rows, .id = all_of(pname))
+    map_depth(., 2, bind_rows, .id = {{pname}})
 
   out <- list("data.adj" = data.adj, "AT" = data.AT)
   return(out)
