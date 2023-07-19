@@ -14,26 +14,3 @@ named_group_split <- function(...) {
   group_split(data) %>%
     set_names(names)
 }
-
-
-#' @title Rselenium Launch Web
-#' @description Launches RSelenium Remote
-#' @details Launches RSelenium Remote
-#' @param ... dynamic dots
-#' @import tidyverse
-#' @import RSelenium
-#' @import  netstat
-#' @export
-launchWeb <- function(...) {
-  driver <-
-    rsDriver(
-      browser = c("chrome"),
-      version = "latest",
-      chromever = "109.0.5414.74",
-      port = netstat::free_port(),
-      verbose = T)
-  return(driver)
-}
-
-
-

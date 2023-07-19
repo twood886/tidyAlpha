@@ -36,7 +36,8 @@ ATPreProcess <- function(
     mutate(
       `factor.q` = ctq(`factor.value`, {{fftile}}),
       `factor.z` = ctz(`factor.value`, {{win.prob}}),
-      `return.z` = ctz(`return`))
+      `return.z` = ctz(`return`),
+      `z.weight` = replace_na(`factor.z` / (sum(abs(`factor.z`), na.rm = T)/2),0))
   return(data.adj)
 }
 
@@ -90,7 +91,8 @@ AlphaTestSRSFSP<-function(data){
         rank(`return`),
         use = "pairwise.complete.obs"),
       u_alpha = !!reg.factor["alpha"],
-      u_beta = !!reg.factor["beta"])
+      u_beta = !!reg.factor["beta"],
+      u_wreturn = sum(z.weight * return, na.rm = T))
 
   # Quantile level statistics
   data.quantile <-
@@ -176,6 +178,8 @@ AlphaTestSRSFSP<-function(data){
 #'       information coefficient based on rank of factor\cr
 #'       quantile spread between top and bottom quantile\cr
 #' @param data dataframe containing return column and factor value column
+#' @param pname character column name of date or period
+#' @param iname character column names of identifier
 #' @param fname character column name of factor
 #' @param rname character column name of return
 #' @param fftile integer number of fractiles to use in spliting data
@@ -194,7 +198,6 @@ AlphaTest<-function(
     fftile = 5,
     win.prob = c(0,1))
   {
-
   # Pivot Data Longer
   data <-
     data %>%
@@ -210,7 +213,7 @@ AlphaTest<-function(
       values_to = "return.value") %>%
     named_group_split(`factor.name`) %>%
     map(., \(x) named_group_split(x, `return.period`)) %>%
-    map_depth(., 2, \(x) named_group_split(x, `Periods`))
+    map_depth(., 2, \(x) named_group_split(x, all_of(pname)))
 
   # Adjust Data
   data.adj <-
@@ -228,7 +231,7 @@ AlphaTest<-function(
   data.AT <-
     data.adj %>%
     map_depth(., 3, AlphaTestSRSFSP) %>%
-    map_depth(., 2, bind_rows, .id = "Periods")
+    map_depth(., 2, bind_rows, .id = {{pname}})
 
   out <- list("data.adj" = data.adj, "AT" = data.AT)
   return(out)
