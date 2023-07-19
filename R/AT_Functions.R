@@ -231,7 +231,7 @@ AlphaTest<-function(
   data.AT <-
     data.adj %>%
     map_depth(., 3, AlphaTestSRSFSP) %>%
-    map_depth(., 2, bind_rows, .id = {{pname}})
+    map_depth(., 2, bind_rows, .id = all_of(pname))
 
   out <- list("data.adj" = data.adj, "AT" = data.AT)
   return(out)
