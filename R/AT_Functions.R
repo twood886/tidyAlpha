@@ -198,6 +198,12 @@ AlphaTest<-function(
     fftile = 5,
     win.prob = c(0,1))
   {
+
+  if(length(rname) > 1){
+    depth = 2
+  }else{
+    depth = 1}
+
   # Pivot Data Longer
   data <-
     data %>%
@@ -211,15 +217,24 @@ AlphaTest<-function(
       cols = all_of(rname),
       names_to = "return.period",
       values_to = "return.value") %>%
-    named_group_split(`factor.name`) %>%
-    map(., \(x) named_group_split(x, `return.period`)) %>%
-    map_depth(., 2, \(x) named_group_split(x, get(pname)))
+    named_group_split(`factor.name`)
+
+  # Split further if Multiple Return Periods
+  if(length(rname) > 1){
+    data <- data %>%
+      map(., \(x) named_group_split(x, `return.period`)) %>%
+      map_depth(., 2, \(x) named_group_split(x, get(pname)))
+  }else{
+    data <- data %>%
+      map(., \(x) named_group_split(x, get(pname)))
+  }
+
 
   # Adjust Data
   data.adj <-
     map_depth(
       data,
-      3,
+      depth + 1,
       ATPreProcess,
       iname = all_of(iname),
       fname = "factor.value",
@@ -230,9 +245,9 @@ AlphaTest<-function(
   # Alpha Test Data
   data.AT <-
     data.adj %>%
-    map_depth(., 3, AlphaTestSRSFSP) %>%
-    map_depth(., 2, bind_rows, .id = {{pname}}) %>%
-    map_depth(2, \(x) mutate(x, {{pname}} := as.Date(get(pname))))
+    map_depth(., depth + 1, AlphaTestSRSFSP) %>%
+    map_depth(., depth, bind_rows, .id = {{pname}}) %>%
+    map_depth(depth, \(x) mutate(x, {{pname}} := as.Date(get(pname))))
 
   out <- list("data.adj" = data.adj, "AT" = data.AT)
   return(out)
